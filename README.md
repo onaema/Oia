@@ -55,5 +55,30 @@ Proyek ini adalah aplikasi desktop berbasis Tauri dengan frontend menggunakan Sv
   cargo test
   ```
 
+## Deployment Instructions
+
+### Prerequisites
+- Docker and Docker Compose installed on your system.
+
+### Steps to Deploy
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd <repository-folder>
+   ```
+
+2. Build and run the services using Docker Compose:
+   ```bash
+   docker-compose up --build
+   ```
+
+3. Access the services:
+   - Backend: [http://localhost:3030](http://localhost:3030)
+   - Frontend: [http://localhost](http://localhost)
+
+### Notes
+- Ensure that the `config.json` file is properly configured for the backend.
+- Modify the `Dockerfile` or `docker-compose.yml` if you need to customize the deployment.
+
 ## Kontribusi
 Silakan buat pull request untuk kontribusi.

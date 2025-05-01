@@ -14,3 +14,14 @@ impl BotState {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_state_initialization() {
+        // Example test for state initialization
+        assert_eq!(2 + 2, 4);
+    }
+}

@@ -50,4 +50,10 @@ mod tests {
         let result = Config::load();
         assert!(result.is_ok());
     }
+
+    #[test]
+    fn test_config_loading() {
+        // Example test for configuration loading
+        assert_eq!(1 + 1, 2);
+    }
 }

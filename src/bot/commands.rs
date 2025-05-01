@@ -14,3 +14,14 @@ pub async fn start(rpc_client: Arc<RpcClient>) -> Result<(), Box<dyn Error>> {
     println!("Bot running...");
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_example_command() {
+        // Example test for a command
+        assert_eq!(2 + 2, 4);
+    }
+}

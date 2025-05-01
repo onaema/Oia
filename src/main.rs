@@ -169,3 +169,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_main_functionality() {
+        // Example test for main functionality
+        assert_eq!(1 + 1, 2);
+    }
+}

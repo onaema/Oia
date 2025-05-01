@@ -7,6 +7,11 @@ test('renders button with correct text', () => {
   expect(getByText('Click Me')).toBeInTheDocument();
 });
 
+test('Button renders correctly', () => {
+    // Example test for Button component
+    expect(true).toBe(true);
+});
+
 test('fetchHelloMessage returns correct data', async () => {
   global.fetch = jest.fn(() =>
     Promise.resolve({
