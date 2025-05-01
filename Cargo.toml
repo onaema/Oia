@@ -1,0 +1,20 @@
+[package]
+name = "solana-memecoin-bot"
+version = "0.1.0"
+edition = "2021"
+authors = ["onaema"]
+description = "Automated trading bot for Solana-based memecoins"
+
+[dependencies]
+tokio = { version = "1.32.0", features = ["full"] }
+solana-sdk = "1.16"
+solana-client = "1.16"
+solana-transaction-status = "1.16"
+anchor-client = "0.28"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+dotenv = "0.15"
+log = "0.4"
+env_logger = "0.10"
+anyhow = "1.0"
+thiserror = "1.0"
