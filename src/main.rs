@@ -1,13 +1,37 @@
-mod bot;
-mod config;
-mod trading;
-mod utils;
+mod core;
+mod integration;
+mod db;
+mod telegram;
+mod ui;
+mod sniper;
 
+use crate::core::config::CoreConfig;
+use crate::core::engine::Engine;
+use crate::integration::solana::SolanaWallet;
+use crate::integration::dex::DexClient;
+use crate::integration::data::MarketDataProvider;
+use crate::db::repository::Repository;
+use crate::telegram::bot::TelegramBot;
+use crate::utils::logger::{log_error, log_trade};
+use crate::utils::helpers::now_timestamp;
+use crate::sniper::{Sniper, SnipeConfig};
+use solana_sdk::pubkey::Pubkey;
 use solana_client::rpc_client::RpcClient;
 use std::error::Error;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use tokio;
 use warp::Filter;
+use env_logger;
+use log::{info, error};
+use once_cell::sync::Lazy;
+
+static SNIPER: Lazy<Mutex<Sniper>> = Lazy::new(|| Mutex::new(Sniper::new(SnipeConfig {
+    min_liquidity: 1.0,
+    max_buy: 0.1,
+    whitelist: vec![],
+    blacklist: vec![],
+    auto_buy: false,
+})));
 
 // 📦 SOLANA MEMECOIN BOT - FINAL ARCHITECTURE
 // Current Date and Time (UTC): 2025-05-01 20:37:54
@@ -146,24 +170,59 @@ use warp::Filter;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    println!("Solana Memecoin Bot - Starting...");
-    println!("Initialized by onaema at 2025-05-01 20:22:13 UTC");
+    env_logger::init();
+    info!("Solana Memecoin Bot - Starting...");
+    info!("Initialized by onaema at 2025-05-02");
 
-    // Initialize RPC client
-    let rpc_url = "https://api.mainnet-beta.solana.com"; // Replace with your RPC endpoint
-    let rpc_client = Arc::new(RpcClient::new(rpc_url.to_string()));
+    // Core config & engine
+    let core_config = CoreConfig::new();
+    let mut engine = Engine::new(core_config.clone());
 
-    // Start the bot logic
+    // Integration: Solana wallet & DEX
+    let wallet = SolanaWallet::new(Pubkey::new_unique());
+    let dex = DexClient::new();
+    let market = MarketDataProvider::new();
+    let price = dex.get_price("SOL/USDC");
+    let latest = market.get_latest_price("SOL/USDC");
+    info!("DEX price: {} | Market price: {}", price, latest);
+
+    // DB: Repository
+    let repo = Repository::new();
+    let trade = db::models::TradeHistory {
+        id: now_timestamp(),
+        symbol: "SOL/USDC".to_string(),
+        amount: 1.0,
+        status: "Executed".to_string(),
+    };
+    repo.save_trade(&trade);
+
+    // Telegram
+    let telegram = TelegramBot::new();
     tokio::spawn(async move {
-        bot::start(rpc_client).await.unwrap();
+        telegram.start().await;
     });
 
-    // Define a simple route
-    let hello = warp::path!("api" / "hello")
-        .map(|| warp::reply::json(&{"message": "Hello from backend!"}));
+    // Logging example
+    log_trade("Trade executed for SOL/USDC");
+    log_error("Example error log");
 
-    // Start the server
-    warp::serve(hello)
+    // Start engine (main bot loop, async)
+    tokio::spawn(async move {
+        engine.run().await;
+    });
+
+    // Start sniper engine (async background)
+    tokio::spawn(async move {
+        let mut sniper = SNIPER.lock().unwrap();
+        sniper.monitor_and_snipe().await;
+    });
+
+    // Modular API
+    let api_routes = ui::web::routes();
+    info!("Starting HTTP server at 127.0.0.1:3030");
+    info!("API server started at http://127.0.0.1:3030");
+    warp::serve(api_routes)
+        .with(ui::web::with_logging())
         .run(([127, 0, 0, 1], 3030))
         .await;
 
